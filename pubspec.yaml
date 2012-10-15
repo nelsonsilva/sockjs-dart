@@ -1,0 +1,10 @@
+name:  sockjs
+version: 0.1.0
+author:
+- Nelson Silva <nelson.silva@inevo.pt>
+description:  A SockJS server in Dart
+dependencies:
+  args: { sdk: args }
+  dart_uuid:
+    git: git://github.com/Daegalus/dart-uuid.git
+
