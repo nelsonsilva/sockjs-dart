@@ -6,12 +6,10 @@ class XhrStreamingReceiver extends ResponseReceiver {
     doSendFrame(payload) => super.doSendFrame( "$payload\n");
 }
 
-class XhrPollingReceiver extends ResponseReceiver {
+class XhrPollingReceiver extends XhrStreamingReceiver {
   
   get protocol => "xhr-polling";
   
-  XhrPollingReceiver(var response, {num responseLimit: null} ) : super(response, responseLimit: responseLimit) {
-    max_response_size = 1;
-  }
-
+  XhrPollingReceiver(var response ) : super(response, responseLimit: 1);
+  
 }

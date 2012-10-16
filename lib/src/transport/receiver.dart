@@ -73,17 +73,19 @@ abstract class ResponseReceiver extends GenericReceiver {
         try {
             // setKeepAlive
             // since we already accessed the outputstream we cannot change persistentConnection
-            response.persistentConnection = true; //, 5000);
+            // response.persistentConnection = true; //, 5000);
+            
             response.headers.add(HttpHeaders.CONNECTION, "keep-alive");
             
             
         } catch (e) {
-          print("Got exception $e");
+          //print("Got exception $e");
         }
         
         if (max_response_size == null) {
             max_response_size = responseLimit;
         }
+        
         
     }
 

@@ -72,6 +72,16 @@ class App extends web.App {
   var _wsHandler = new WebSocketHandler();
   
   _websocketCheck(HttpRequest req) {
+
+    String upgrade = req.headers.value("upgrade");
+
+    if ( (upgrade == null) || (upgrade.toLowerCase() != 'websocket')) {
+      throw new web.AppException(
+        status: 400,
+        message: 'Can "Upgrade" only to "WebSocket".'
+      );
+    }
+    
     var origin = req.headers.value("origin");
     if (!utils.verify_origin(origin, origins)) {
         throw new web.AppException(
@@ -81,7 +91,6 @@ class App extends web.App {
   }
   
   raw_websocket(HttpRequest req, HttpResponse res, [data, nextFilter]) {
-
     _websocketCheck(req);
 
     _wsHandler.onOpen = (WebSocketConnection conn) {
@@ -103,7 +112,15 @@ class App extends web.App {
   
   // XHR Transport
   
+  xhr_options(HttpRequest req, HttpResponse res, [data, nextFilter]) {
+    res.statusCode = 204;   // No content
+    res.headers.add('Access-Control-Allow-Methods', 'OPTIONS, POST');
+    res.headers.add('Access-Control-Max-Age', _cacheFor(res));
+    return '';
+  }
+      
   xhr_send(HttpRequest req, HttpResponse res, [data, nextFilter]) {
+    
     var d = null;
 
     if (!?data) {
@@ -128,7 +145,10 @@ class App extends web.App {
       );
     }
     
-    var jsonp = Session.bySessionId(new web.AppRequest(req).session);
+    var sessionId = new web.AppRequest(req).session;
+    
+    var jsonp = Session.bySessionId(sessionId);
+    
     if (jsonp == null) {
       throw new web.AppException(status: 404);
     } 
@@ -146,10 +166,11 @@ class App extends web.App {
   xhr_cors(HttpRequest req, HttpResponse res, [content, nextFilter]) {
     
     var origin = req.headers.value('origin');
-    
-    if ( origin == null) {
+   
+    if ( origin == null || origin == 'null') {
       origin = '*';
     }
+
     res.headers.add('Access-Control-Allow-Origin', origin);
     var headers = req.headers.value('access-control-request-headers');
     if (headers != null) {
@@ -167,15 +188,14 @@ class App extends web.App {
     // IE requires 2KB prefix:
     //  http://blogs.msdn.com/b/ieinternals/archive/2010/04/06/comet-streaming-in-internet-explorer-with-xmlhttprequest-and-xdomainrequest.aspx
     var s = new StringBuffer();
-    for ( int i = 0; i < 2049; i++) {
+    for ( int i = 0; i < 2048; i++) {
       s.add('h');
     }
     s.add('\n');
-
-    Transport.register(req, this, new XhrStreamingReceiver(res, responseLimit: responseLimit) );
     
-    // Must write after registering to ensure headers are not sent
     res.outputStream.writeString(s.toString());
+    
+    Transport.register(req, this, new XhrStreamingReceiver(res, responseLimit: responseLimit) );
     
     return true;
   }
@@ -184,7 +204,7 @@ class App extends web.App {
     res.headers.add(HttpHeaders.CONTENT_TYPE, 'application/javascript; charset=UTF-8');
     res.statusCode = 200;
   
-    Transport.register(req, this, new XhrPollingReceiver(res,responseLimit: responseLimit));
+    Transport.register(req, this, new XhrPollingReceiver(res)); //,responseLimit: responseLimit));
     return true;
   }
       
@@ -199,5 +219,18 @@ class App extends web.App {
     res.headers.add(HttpHeaders.CONTENT_TYPE, 'application/json; charset=UTF-8');
     res.statusCode = 200;
     res.outputStream.writeString(JSON.stringify(info));
+  }
+  
+  info_options(HttpRequest req, HttpResponse res, [data, nextFilter]) {
+    res.headers.add('Access-Control-Allow-Methods', 'OPTIONS, GET');
+    res.headers.add('Access-Control-Max-Age', _cacheFor(res));
+    res.statusCode = 204;
+    return '';
+  }
+  
+  _cacheFor(HttpResponse res) {
+    String cacheFor = res.headers.value(HttpHeaders.CACHE_CONTROL);
+    cacheFor = cacheFor.substring("public, max-age=".length);
+    return Math.parseInt(cacheFor);
   }
 }

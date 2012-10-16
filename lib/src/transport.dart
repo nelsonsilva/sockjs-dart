@@ -10,8 +10,8 @@ class Transport {
     var session = Session.bySessionId(session_id);
     if (session == null) {
       session = new Session(session_id, server);
-      session.register(req, receiver);
     }
+    session.register(req, receiver);
     return session;
   }
   

@@ -34,7 +34,7 @@ Map<String, String> parseCookies(List<Cookie> cookies) {
 
 random32() {
   var rnd = new Math.Random();
-  var foo = () => (rnd.nextDouble() *256).floor();
+  var foo = () => rnd.nextInt(256);
   var v = [foo(), foo(), foo(), foo()];
   
   var x =  v[0] + (v[1]*256 ) + (v[2]*256*256) + (v[3]*256*256*256);

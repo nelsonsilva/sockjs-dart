@@ -126,13 +126,18 @@ class App {
         }
         
         if (e is AppException) {
-
-          if (e.status == 0) {
-            return;
-          } //else if 'handle_' + x.status of app
-            //app['handle_' + x.status](req, res, x)
-          else {
-            handleError(req, res, e);
+          
+          switch (e.status) {
+            case 0:
+              return;
+            case 404:
+              handle404(req, res, e);
+              break;
+            case 405:
+              handle405(req, res, []);
+              break;
+            default:
+              handleError(req, res, e);
           }
         } else {
           handleError(req, res, e);
@@ -171,6 +176,7 @@ class App {
     if (x is AppException) {
       res.statusCode = x.status;
       res.outputStream.writeString(x.message);
+      res.outputStream.close();
     } else {
       try {
         res.statusCode = 500;
@@ -184,7 +190,6 @@ class App {
   }
   
   handle405(HttpRequest req, HttpResponse res, List<String> methods) {
-    String s;
     res.headers.set(HttpHeaders.ALLOW, Strings.join(methods, ', '));
     res.statusCode = 405;
     res.outputStream.close();
