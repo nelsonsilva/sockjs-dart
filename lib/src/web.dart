@@ -10,13 +10,24 @@ class AppException implements Exception {
   String toString() => "AppException: $status ($message)";
 }
 
+typedef HandlerFn(HttpRequest r, HttpResponse res, [content, nextFilter]);
+
+class Dispatcher implements Iterable {
+  List dispatcher = [];
+  _addRoute(String method, path, List<HandlerFn> chain) => dispatcher.add([method, path, chain]);
+  GET(path, chain) => _addRoute('GET', path, chain);
+  POST(path, chain) => _addRoute('POST', path, chain);
+  OPTIONS(path, chain) => _addRoute('OPTIONS', path, chain);
+  
+  Iterator iterator() => dispatcher.iterator();
+}
+
 class App {
   
   App();
-      
-  generateHandler(List dispatcher) => (HttpRequest r, HttpResponse res) {
-    //InstanceMirror appIM = reflect(app);
-    
+
+  generateHandler(Dispatcher dispatcher) => (HttpRequest r, HttpResponse res) {
+   
     var req = new AppRequest(r);
     
     var extra = "";
@@ -39,7 +50,7 @@ class App {
         path = [path];
       }
 
-      //print("checking method=(${req.method}==$method) path=(${req.path}==$path) funs = ${Strings.join(funs,',')}");
+      //print("checking method=(${req.method}==$method) path=(${req.path}==$path)");
       
       // path[0] must be a regexp
       Match match = (path[0] as RegExp).firstMatch(req.path);
@@ -53,7 +64,7 @@ class App {
         continue;
       }
       
-      //print("found method=$method path=$path funs = ${Strings.join(funs,',')}");
+      //print("found method=$method path=$path");
       
       var matches = match.groupCount();
       
@@ -90,60 +101,35 @@ class App {
     }
     
   };
-    
- 
-  _invoke(List<String> funs, List<Dynamic> args, [InstanceMirror im]) {
-    
-    if (!?im) {
-      im = reflect(this);
-    }
-
-    // must replicate the shift to modify the array
-    String fun = funs.removeAt(0);
-    
-    Future f = im.invoke(fun, args.map((a) => reflect(a)));
-    
-    // chain the next invocation (ugly :P)
-    if(funs.length > 0) {
-      f = f.chain((_) => _invoke(funs, args, im));
-    }
-    return f;
-  }
-  
-  executeRequest(List funs, HttpRequest r, HttpResponse res, data) {
-        
-    if (funs.isEmpty()) {
-      return;
-    }
+     
+  executeRequest(List<HandlerFn> funs, HttpRequest r, HttpResponse res, data) {
     
     var req = new AppRequest(r);
     
-    Future f = _invoke(funs, [req, res, data, req.nextFilter]);
-    
-    f.handleException((e) {
-        if (e is MirroredUncaughtExceptionError) {
-          e = (e as MirroredUncaughtExceptionError).exception_mirror.reflectee;
-        }
-        
-        if (e is AppException) {
-          
-          switch (e.status) {
-            case 0:
-              return;
-            case 404:
-              handle404(req, res, e);
-              break;
-            case 405:
-              handle405(req, res, []);
-              break;
-            default:
-              handleError(req, res, e);
-          }
-        } else {
+    try {
+      do  {
+        // must replicate the shift to modify the array
+        var fun = funs.removeAt(0);
+        fun(req, res, data, req.nextFilter); 
+      } while(!funs.isEmpty());
+    } on AppException catch (e) {   
+      switch (e.status) {
+        case 0:
+          return;
+        case 404:
+          handle404(req, res, e);
+          break;
+        case 405:
+          handle405(req, res, []);
+          break;
+        default:
           handleError(req, res, e);
-        }
-        logRequest(req, res, true);
-    });
+      }
+    } on Dynamic catch (e) {
+      handleError(req, res, e);
+    } finally {
+      logRequest(req, res, true);
+    }
   }
   
   logRequest(HttpRequest r, HttpResponse res, data) {
@@ -225,16 +211,12 @@ class App {
   }
       
   expect_xhr(HttpRequest req, HttpResponse res, [c, nextFilter]) {
-    // = new Uint8List(0);
-    
 
-    
     List<int> data;
     
     req.inputStream.onData = () {
       int available = req.inputStream.available();
       data = req.inputStream.read();
-      
    };
    
    req.inputStream.onClosed = () {
