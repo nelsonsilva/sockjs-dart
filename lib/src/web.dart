@@ -176,9 +176,17 @@ class App {
   }
   
   handle405(HttpRequest req, HttpResponse res, List<String> methods) {
+
     res.headers.set(HttpHeaders.ALLOW, Strings.join(methods, ', '));
     res.statusCode = 405;
-    res.outputStream.close();
+    
+    // Cannot close since HttpParser is waiting for the body!
+    if(req.contentLength == -1) {
+      res.detachSocket().socket.close();
+    } else {
+      res.outputStream.close();
+    }
+    
     return true;
   }
 
