@@ -1,3 +1,11 @@
+#library("websocket");
+
+#import("dart:io");
+#import("dart:json");
+#import("package:sockjs/sockjs.dart");
+#import("package:sockjs/src/web.dart", prefix:'web');
+#import("package:sockjs/src/utils.dart", prefix:'utils');
+
 class WebSocketReceiver extends GenericReceiver {
     get protocol => "websocket";
 
@@ -173,3 +181,45 @@ class RawWebsocketSessionReceiver extends SockJSSession {
     }
   }
 }
+
+// WebSocket Transport
+var _wsHandler = new WebSocketHandler();
+
+_websocketCheck(HttpRequest req, List<String> origins) {
+
+  String upgrade = req.headers.value("upgrade");
+
+  if ( (upgrade == null) || (upgrade.toLowerCase() != 'websocket')) {
+    throw new web.AppException(
+        status: 400,
+        message: 'Can "Upgrade" only to "WebSocket".'
+      );
+    }
+    
+    var origin = req.headers.value("origin");
+    if (!utils.verify_origin(origin, origins)) {
+        throw new web.AppException(
+          status: 400,
+          message: 'Unverified origin.');
+    }
+  }
+  
+  raw(web.App app, List<String> origins) => (HttpRequest req, HttpResponse res, [data, nextFilter]) {
+  _websocketCheck(req, origins);
+    
+  _wsHandler.onOpen = (WebSocketConnection conn) {
+    new RawWebsocketSessionReceiver(req, res, app, conn);
+  };
+  _wsHandler.onRequest(req, res);
+};
+  
+sockjs(web.App app, List<String> origins) => (HttpRequest req, HttpResponse res, [data, nextFilter]) {
+  _websocketCheck(req, origins);
+  var info = req.connectionInfo;
+
+  _wsHandler.onOpen = (WebSocketConnection conn) {
+    Transport.registerNoSession(req, app, new WebSocketReceiver(conn, info) );
+  };
+  _wsHandler.onRequest(req, res);
+};
+  

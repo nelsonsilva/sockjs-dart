@@ -65,149 +65,7 @@ class App extends web.App {
   }
 
   log(severity, line) => print("[$severity] - $line");
-  
-  // TRANSPORTS
-  
-  // WebSocket Transport
-  var _wsHandler = new WebSocketHandler();
-  
-  _websocketCheck(HttpRequest req) {
-
-    String upgrade = req.headers.value("upgrade");
-
-    if ( (upgrade == null) || (upgrade.toLowerCase() != 'websocket')) {
-      throw new web.AppException(
-        status: 400,
-        message: 'Can "Upgrade" only to "WebSocket".'
-      );
-    }
-    
-    var origin = req.headers.value("origin");
-    if (!utils.verify_origin(origin, origins)) {
-        throw new web.AppException(
-          status: 400,
-          message: 'Unverified origin.');
-    }
-  }
-  
-  raw_websocket(HttpRequest req, HttpResponse res, [data, nextFilter]) {
-    _websocketCheck(req);
-
-    _wsHandler.onOpen = (WebSocketConnection conn) {
-      new RawWebsocketSessionReceiver(req, res, this, conn);
-    };
-    _wsHandler.onRequest(req, res);
-  }
-  
-  sockjs_websocket(HttpRequest req, HttpResponse res, [data, nextFilter]) {
-    _websocketCheck(req);
-    var info = req.connectionInfo;
-
-    _wsHandler.onOpen = (WebSocketConnection conn) {
-      Transport.registerNoSession(req, this, new WebSocketReceiver(conn, info) );
-    };
-    _wsHandler.onRequest(req, res);
-    
-  }
-  
-  // XHR Transport
-  
-  xhr_options(HttpRequest req, HttpResponse res, [data, nextFilter]) {
-    res.statusCode = 204;   // No content
-    res.headers.add('Access-Control-Allow-Methods', 'OPTIONS, POST');
-    res.headers.add('Access-Control-Max-Age', _cacheFor(res));
-    return '';
-  }
-      
-  xhr_send(HttpRequest req, HttpResponse res, [data, nextFilter]) {
-    
-    var d = null;
-
-    if (!?data) {
-      throw new web.AppException(
-        status: 500,
-        message: 'Payload expected.'
-      );
-    }
-    try {
-      d = JSON.parse(data);
-    } catch (e) {
-      throw new web.AppException(
-        status: 500,
-        message: 'Broken JSON encoding.'
-      );
-    }
-  
-    if ((d == null) || (d is! List)) {
-      throw new web.AppException(
-        status: 500,
-        message: 'Payload expected.'
-      );
-    }
-    
-    var sessionId = new web.AppRequest(req).session;
-    
-    var jsonp = Session.bySessionId(sessionId);
-    
-    if (jsonp == null) {
-      throw new web.AppException(status: 404);
-    } 
-
-    d.forEach((message) => jsonp.didMessage(message));
-
-    // FF assumes that the response is XML.
-    res.headers.add(HttpHeaders.CONTENT_TYPE, 'text/plain; charset=UTF-8');
-    res.statusCode = 204;
-    res.outputStream.close();
-    return true;
-  }
-
-      
-  xhr_cors(HttpRequest req, HttpResponse res, [content, nextFilter]) {
-    
-    var origin = req.headers.value('origin');
-   
-    if ( origin == null || origin == 'null') {
-      origin = '*';
-    }
-
-    res.headers.add('Access-Control-Allow-Origin', origin);
-    var headers = req.headers.value('access-control-request-headers');
-    if (headers != null) {
-      res.headers.add('Access-Control-Allow-Headers', headers);
-    }
-    res.headers.add('Access-Control-Allow-Credentials', 'true');
-    return content;
-  }
-  
-  xhr_streaming(HttpRequest req, HttpResponse res, [content, nextFilter]) {
-   
-    res.headers.add(HttpHeaders.CONTENT_TYPE, 'application/javascript; charset=UTF-8');
-    res.statusCode = 200;
-
-    // IE requires 2KB prefix:
-    //  http://blogs.msdn.com/b/ieinternals/archive/2010/04/06/comet-streaming-in-internet-explorer-with-xmlhttprequest-and-xdomainrequest.aspx
-    var s = new StringBuffer();
-    for ( int i = 0; i < 2048; i++) {
-      s.add('h');
-    }
-    s.add('\n');
-    
-    res.outputStream.writeString(s.toString());
-    
-    Transport.register(req, this, new XhrStreamingReceiver(res, responseLimit: responseLimit) );
-    
-    return true;
-  }
-       
-  xhr_poll(HttpRequest req, HttpResponse res, [content, nextFilter]) {
-    res.headers.add(HttpHeaders.CONTENT_TYPE, 'application/javascript; charset=UTF-8');
-    res.statusCode = 200;
-  
-    Transport.register(req, this, new XhrPollingReceiver(res)); //,responseLimit: responseLimit));
-    return true;
-  }
-      
+     
   // Chunking Test
   info(HttpRequest req, HttpResponse res, [data, nextFilter]) {
     var info = {
@@ -223,15 +81,9 @@ class App extends web.App {
   
   info_options(HttpRequest req, HttpResponse res, [data, nextFilter]) {
     res.headers.add('Access-Control-Allow-Methods', 'OPTIONS, GET');
-    res.headers.add('Access-Control-Max-Age', _cacheFor(res));
+    res.headers.add('Access-Control-Max-Age', utils.getCacheFor(res));
     res.statusCode = 204;
     return '';
-  }
-  
-  _cacheFor(HttpResponse res) {
-    String cacheFor = res.headers.value(HttpHeaders.CACHE_CONTROL);
-    cacheFor = cacheFor.substring("public, max-age=".length);
-    return Math.parseInt(cacheFor);
   }
   
   
@@ -242,23 +94,23 @@ class App extends web.App {
     var t = (s) => [p('/([^/.]+)/([^/.]+)$s'), 'server', 'session'];
     
     var opts_filters = ([options_filter = null])
-        => [h_sid, xhr_cors, cache_for, (options_filter != null)?options_filter:xhr_options, expose];
-      
+        => [h_sid, xhr.cors, cache_for, (options_filter != null)?options_filter:xhr.options, expose];
+    
     var route = new web.Dispatcher()
       ..GET(p(''), [welcome_screen])
       //..GET(p('/iframe[0-9-.a-z_]*.html'), [iframe, cache_for, expose])
       ..OPTIONS(p('/info'), opts_filters(info_options))
-      ..GET(p('/info'), [xhr_cors, h_no_cache, info, expose])
+      ..GET(p('/info'), [xhr.cors, h_no_cache, info, expose])
       ..OPTIONS(p('/chunking_test'), opts_filters())
       //..POST(p('/chunking_test'), [xhr_cors, expect_xhr, chunking_test])
-      ..GET(p('/websocket'), [raw_websocket])
+      ..GET(p('/websocket'), [ws.raw(this, origins)])
       //..GET(t('/jsonp'), [h_sid, h_no_cache, jsonp])
       //POST(t('/jsonp_send'), [h_sid, h_no_cache, expect_form, jsonp_send])
-      ..POST(t('/xhr'), [h_sid, h_no_cache, xhr_cors, xhr_poll])
+      ..POST(t('/xhr'), [h_sid, h_no_cache, xhr.cors, xhr.poll(this, responseLimit)])
       ..OPTIONS(t('/xhr'), opts_filters())
-      ..POST(t('/xhr_send'), [h_sid, h_no_cache, xhr_cors, expect_xhr, xhr_send])
+      ..POST(t('/xhr_send'), [h_sid, h_no_cache, xhr.cors, expect_xhr, xhr.send])
       ..OPTIONS(t('/xhr_send'), opts_filters())
-      ..POST(t('/xhr_streaming'), [h_sid, h_no_cache, xhr_cors, xhr_streaming])
+      ..POST(t('/xhr_streaming'), [h_sid, h_no_cache, xhr.cors, xhr.streaming(this, responseLimit)])
       ..OPTIONS(t('/xhr_streaming'), opts_filters());
       //..GET(t('/eventsource'), [h_sid, h_no_cache, eventsource])
       //..GET(t('/htmlfile'),    [h_sid, h_no_cache, htmlfile])
@@ -266,7 +118,7 @@ class App extends web.App {
 
     // TODO: remove this code on next major release
     if (websocket) {
-      route.GET(t('/websocket'), [sockjs_websocket]);
+      route.GET(t('/websocket'), [ws.sockjs(this, origins)]);
     } else {
       // modify urls to return 404
       route.GET(t('/websocket'), [cache_for, disabled_transport]);

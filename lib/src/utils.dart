@@ -40,3 +40,9 @@ random32() {
   var x =  v[0] + (v[1]*256 ) + (v[2]*256*256) + (v[3]*256*256*256);
   return x;
 }
+
+getCacheFor(HttpResponse res) {
+  String cacheFor = res.headers.value(HttpHeaders.CACHE_CONTROL);
+  cacheFor = cacheFor.substring("public, max-age=".length);
+  return Math.parseInt(cacheFor);
+}
