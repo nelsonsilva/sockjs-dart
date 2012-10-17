@@ -13,7 +13,6 @@
 #import("src/web.dart", prefix:'web');
 #import("src/utils.dart", prefix:'utils');
 
-#source("src/listener.dart");
 #source("src/app.dart");
 #source("src/server.dart");
 #source("src/transport.dart");

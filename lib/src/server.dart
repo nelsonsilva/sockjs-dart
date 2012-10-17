@@ -6,6 +6,7 @@ class Server implements event.Emitter<ServerEvents> {
   
   ServerEvents on = new ServerEvents();
   
+  // Options
   String prefix;
   num responseLimit;
   List<String> origins;
@@ -33,27 +34,25 @@ class Server implements event.Emitter<ServerEvents> {
         bool websocket: true,
         bool jsessionid: false}) {
     
-      var listener = new Listener(
-          prefix: prefix,
-          responseLimit: responseLimit,
+      var app = new App(
+          jsessionid: jsessionid, 
+          websocket: websocket, 
           origins: origins,
-          websocket: websocket,
-          jsessionid: jsessionid,
+          responseLimit: responseLimit,
           heartbeatDelay: heartbeatDelay,
           disconnectDelay: disconnectDelay,
-          emit: (evt, data) => on[evt].dispatch(data)
-          );
-    
-      httpServer.addRequestHandler(listener.matcher, listener.handler);
+          prefix: prefix);
+      app.emit = (evt, data) => on[evt].dispatch(data);
+
+      var dispatcher = app.generateDispatcher(prefix),
+          appHandler = app.generateHandler(dispatcher),
+          pathRegexp = new RegExp('^${prefix}([/].+|[/]?)\$'),
+          matcher = (HttpRequest request) => pathRegexp.hasMatch(request.uri),
+          handler = (HttpRequest request, HttpResponse response) => appHandler(request, response);
+        
+      httpServer.addRequestHandler(matcher, handler);
   
-      //utils.overshadowListeners(http_server, 'request', handler)
-      //utils.overshadowListeners(http_server, 'upgrade', handler)
       return true;
   }
 
-    //middleware(handler_options) {
-    //    handler = @listener(handler_options).getHandler()
-    //    handler.upgrade = handler
-    //    return handler
-    //}
 }
