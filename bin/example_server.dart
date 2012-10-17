@@ -24,24 +24,25 @@ get echo =>
       });
     });
 
-get chat() {
-  List<sockjs.SockJSConnection> participants = [];
-  
-  broadcast(msg) => participants.forEach((p) => p.write(msg));
-  
+get broadcast {
+  var participants = [];
   return sockjs.createServer()
     ..on.connection.add( (conn) {
-      print("    [+] echo open    $conn");
-      broadcast("Someone joined.");
+      print('    [+] broadcast open $conn');
       participants.add(conn);
-      conn.on.close.add( (conn) { 
+      conn.on.close.add( (conn) {
         var idx = participants.indexOf(conn);
         participants.removeAt(idx);
-        print("    [-] echo close   $conn");
+        print('    [-] broadcast close $conn');
       });
-      conn.on.data.add( (m) => broadcast(m));
+      conn.on.data.add( (m) {
+        print('    [-] broadcast message $m');
+        participants.forEach((conn) => conn.write(m));
+      });
     });
 }
+
+get chat => broadcast;
 
 void main() {
 
@@ -75,6 +76,7 @@ void main() {
  
   echo.installHandlers(server, prefix:'/echo');
   chat.installHandlers(server, prefix:'/chat');
+  broadcast.installHandlers(server, prefix:'/broadcast');
   
   server.listen(HOST, PORT);
   

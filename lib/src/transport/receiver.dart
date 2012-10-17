@@ -48,7 +48,7 @@ abstract class GenericReceiver extends Receiver {
     }
 
     doSendBulk(List messages) {
-        var q_msgs = messages.map((m) => '"$m"');
+        var q_msgs = messages.map((m) => JSON.stringify(m));
         var str = Strings.join(q_msgs, ',');
         doSendFrame('a[$str]');
     }
