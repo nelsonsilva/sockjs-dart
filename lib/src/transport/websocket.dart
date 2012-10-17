@@ -79,8 +79,6 @@ class RawWebsocketSessionReceiver extends SockJSSession {
   var _message_cb;
   
   RawWebsocketSessionReceiver(HttpRequest req, HttpResponse conn, App server, this.ws) {
-        
-    print("[RawWebsocketSessionReceiver]");
     prefix = server.prefix;
     readyState = Transport.OPEN;
 
@@ -92,10 +90,6 @@ class RawWebsocketSessionReceiver extends SockJSSession {
     _end_cb = () => didClose();
     
     ws.onClosed = (int status, String reason) {
-      //if (status == WebSocketStatus.NO_STATUS_RECEIVED) {
-      //  return;
-      //}
-      print("[RawWebsocketSessionReceiver] onClosed($status): $reason");
       _end_cb();
     };
     
@@ -103,11 +97,9 @@ class RawWebsocketSessionReceiver extends SockJSSession {
     
     ws.onMessage = (m) => _message_cb(m);
     
-    print("[RawWebsocketSessionReceiver] HERE");
   }
 
   didMessage(m) {
-      print("[RawWebsocketSessionReceiver] got $m");
       if (readyState == Transport.OPEN) {
           connection.on.data.dispatch(m);
       }
@@ -115,7 +107,6 @@ class RawWebsocketSessionReceiver extends SockJSSession {
   }
 
   send(payload) {
-      print("[RawWebsocketSessionReceiver] send $payload");
       if (readyState != Transport.OPEN) {
           return false;
       }
