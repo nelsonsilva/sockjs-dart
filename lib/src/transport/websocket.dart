@@ -109,7 +109,7 @@ class RawWebsocketSessionReceiver extends SockJSSession {
   didMessage(m) {
       print("[RawWebsocketSessionReceiver] got $m");
       if (readyState == Transport.OPEN) {
-          connection.on.data.dispatch(m.data);
+          connection.on.data.dispatch(m);
       }
       return;
   }
@@ -204,7 +204,7 @@ _websocketCheck(HttpRequest req, List<String> origins) {
     }
   }
   
-  raw(web.App app, List<String> origins) => (HttpRequest req, HttpResponse res, [data, nextFilter]) {
+raw(web.App app, List<String> origins) => (HttpRequest req, HttpResponse res, [data, nextFilter]) { 
   _websocketCheck(req, origins);
     
   _wsHandler.onOpen = (WebSocketConnection conn) {
