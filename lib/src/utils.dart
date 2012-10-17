@@ -3,6 +3,7 @@
 #import("dart:io");
 #import('dart:uri');
 #import("dart:math", prefix:'Math');
+#import("dart:crypto");
 
 bool verify_origin(String origin, List<String> list_of_origins) {
     if (list_of_origins.indexOf('*:*') != -1) {
@@ -41,6 +42,8 @@ random32() {
   return x;
 }
 
+md5_hex(String data) => CryptoUtils.bytesToHex(new MD5().update(data.charCodes()).digest());
+    
 getCacheFor(HttpResponse res) {
   String cacheFor = res.headers.value(HttpHeaders.CACHE_CONTROL);
   cacheFor = cacheFor.substring("public, max-age=".length);

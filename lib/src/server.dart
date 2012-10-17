@@ -41,7 +41,8 @@ class Server implements event.Emitter<ServerEvents> {
           responseLimit: responseLimit,
           heartbeatDelay: heartbeatDelay,
           disconnectDelay: disconnectDelay,
-          prefix: prefix);
+          prefix: prefix,
+          sockjsUrl: sockjsUrl);
       app.emit = (evt, data) => on[evt].dispatch(data);
 
       var dispatcher = app.generateDispatcher(prefix),

@@ -17,6 +17,7 @@
 #source("src/app.dart");
 #source("src/server.dart");
 #source("src/transport.dart");
+#source("src/iframe.dart");
 #source("src/transport/connection.dart");
 #source("src/transport/session.dart");
 #source("src/transport/receiver.dart");

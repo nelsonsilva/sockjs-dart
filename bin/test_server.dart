@@ -13,7 +13,7 @@ qunitTests(server, host, port) {
 
   // tests-qunit.html && iframe.html
   server.addRequestHandler(
-      (HttpRequest request) => ((request.path == '/tests-qunit.html') || (request.path == '/iframe.html')),
+      (HttpRequest request) => ((request.path == '/tests-qunit.html')),
       (HttpRequest request, HttpResponse response) {
         String basePath = new File(new Options().script).directorySync().path;
         final File file = new File('${basePath}/../test${request.path}');

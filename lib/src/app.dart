@@ -10,6 +10,7 @@ class App extends web.App {
   num heartbeatDelay;
   num disconnectDelay;
   String prefix;
+  String sockjsUrl;
   
   EmitFn emit;
   
@@ -19,7 +20,8 @@ class App extends web.App {
         this.responseLimit,
         this.heartbeatDelay,
         this.disconnectDelay,
-        this.prefix}) : super();
+        this.prefix,
+        this.sockjsUrl}) : super();
    
   welcome_screen(HttpRequest req, HttpResponse res, [data, nextFilter]) {
     res.headers.set(HttpHeaders.CONTENT_TYPE, "text/plain; charset=UTF-8");
@@ -89,7 +91,7 @@ class App extends web.App {
   
   // DISPATCHER
   web.Dispatcher generateDispatcher(String prefix, [bool websocket = true]) {
-
+    
     var p = (s) => new RegExp('^${prefix}$s[/]?\$');
     var t = (s) => [p('/([^/.]+)/([^/.]+)$s'), 'server', 'session'];
     
@@ -98,7 +100,7 @@ class App extends web.App {
     
     var route = new web.Dispatcher()
       ..GET(p(''), [welcome_screen])
-      //..GET(p('/iframe[0-9-.a-z_]*.html'), [iframe, cache_for, expose])
+      ..GET(p('/iframe[0-9-.a-z_]*.html'), [iframe(sockjsUrl), cache_for, expose])
       ..OPTIONS(p('/info'), opts_filters(info_options))
       ..GET(p('/info'), [xhr.cors, h_no_cache, info, expose])
       ..OPTIONS(p('/chunking_test'), opts_filters())
