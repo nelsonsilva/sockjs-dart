@@ -11,6 +11,12 @@ To run the tests first start the test_server:
 
 Then make sure you have all the dependencies installed (see below) call `make <target>`
 
+### QUnit Tests (from SockJS Client)
+
+Open your browser at:
+
+	http://localhost:8081/tests-qunit.html
+	
 ### SockJS Protocol Tests
 
 First update the sockjs-protocol submodule:

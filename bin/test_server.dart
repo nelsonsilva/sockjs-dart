@@ -8,6 +8,81 @@
 #import('package:args/args.dart');
 #import("package:sockjs/sockjs.dart", prefix:"sockjs");
 
+/// QUnit tests from sockjs-client
+qunitTests(server, host, port) {
+
+  // tests-qunit.html && iframe.html
+  server.addRequestHandler(
+      (HttpRequest request) => ((request.path == '/tests-qunit.html') || (request.path == '/iframe.html')),
+      (HttpRequest request, HttpResponse response) {
+        String basePath = new File(new Options().script).directorySync().path;
+        final File file = new File('${basePath}/../test${request.path}');
+        file.openInputStream().pipe(response.outputStream);
+      });
+  
+  // slow-script.js
+  server.addRequestHandler(
+      (HttpRequest request) { return request.path == '/slow-script.js';},
+      (HttpRequest request, HttpResponse response) {
+        response.headers.add(HttpHeaders.CONTENT_TYPE, 'application/javascript');
+        new Timer(500, (_) {
+          response.outputStream.writeString("var a = 1;");
+          response.outputStream.close();
+        });
+      });
+  
+  // streaming.txt
+  server.addRequestHandler(
+      (HttpRequest request) { return request.path == '/streaming.txt';},
+      (HttpRequest request, HttpResponse response) {
+        response.headers.add(HttpHeaders.CONTENT_TYPE, 'text/plain');
+        response.headers.add('Access-Control-Allow-Origin', '*');
+        var s = new StringBuffer();
+        for (var i = 0; i < 2048; i++) {
+          s.add('a');
+        }
+        s.add('\n');
+        response.outputStream.writeString(s.toString());
+        new Timer(250, (_) {
+          response.outputStream.writeString("b\n");
+          response.outputStream.close();
+        });
+      });
+  
+  // simple.txt
+  server.addRequestHandler(
+      (HttpRequest request) { return request.path == '/simple.txt';},
+      (HttpRequest request, HttpResponse response) {
+        response.headers.add(HttpHeaders.CONTENT_TYPE, 'text/plain');
+        response.headers.add('Access-Control-Allow-Origin', '*');
+        var s = new StringBuffer();
+        for (var i = 0; i < 2048; i++) {
+          s.add('a');
+        }
+        s.add('\nb\n');
+        response.outputStream.writeString(s.toString());
+        response.outputStream.close();
+      });
+  
+  // config.js
+  server.addRequestHandler(
+      (HttpRequest request) { return request.path == '/config.js';},
+      (HttpRequest request, HttpResponse response) {
+        response.headers.add(HttpHeaders.CONTENT_TYPE, 'application/javascript');
+        response.outputStream.writeString(
+             'var client_opts = {'
+             '  url: \'http://$host:$port\','
+             '  sockjs_opts: {'
+             '    devel: true,'
+             '    debug: true,'
+             '    websocket: true,'
+             '    info: {cookie_needed:false}'
+             '  }'
+             '};');
+        response.outputStream.close();
+      });
+}
+
 void main() {
   var parser = new ArgParser();
 
@@ -38,7 +113,7 @@ void main() {
   server.defaultRequestHandler = (HttpRequest req, HttpResponse res) {
     res.headers.set(HttpHeaders.CONTENT_TYPE, "text/plain");
     res.statusCode = 404;
-    res.outputStream.writeString('404 - Nothing here (via sockjs-dart test_server)');
+    //res.outputStream.writeString('404 - Nothing here (via sockjs-dart test_server)');
     res.outputStream.close();
   };
   
@@ -158,6 +233,8 @@ void main() {
   sjs_ticker.installHandlers(server, prefix:'/ticker');
   sjs_amplify.installHandlers(server, prefix:'/amplify');
   sjs_broadcast.installHandlers(server, prefix:'/broadcast');
+  
+  qunitTests(server, opts["host"], opts["port"]);
   
   server.listen(opts["host"], parseInt(opts["port"]));
   
