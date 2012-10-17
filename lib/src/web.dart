@@ -212,7 +212,7 @@ class App {
       
   expect_xhr(HttpRequest req, HttpResponse res, [c, nextFilter]) {
 
-    List<int> data;
+    List<int> data = null;
     
     req.inputStream.onData = () {
       int available = req.inputStream.available();
@@ -230,6 +230,8 @@ class App {
        contentType = '';
      }
     
+     contentType = contentType.split(';')[0];
+     
      switch(contentType) {
        case 'text/plain':
        case 'T':
@@ -237,8 +239,10 @@ class App {
        case 'application/xml':
        case '':
        case 'text/xml':
+         if (data != null) {
           content = new String.fromCharCodes(data);
-          break;
+         }
+         break;
        default:
          log('error', 'Unsupported content-type $contentType');
      }

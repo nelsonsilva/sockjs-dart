@@ -4,7 +4,7 @@ sockjs-protocol-tests:
 	./venv/bin/python sockjs-protocol/sockjs-protocol-0.3.3.py SessionURLs
 	./venv/bin/python sockjs-protocol/sockjs-protocol-0.3.3.py Protocol
 	./venv/bin/python sockjs-protocol/sockjs-protocol-0.3.3.py XhrStreaming
-#	./venv/bin/python sockjs-protocol/sockjs-protocol-0.3.3.py XhrPolling
+	./venv/bin/python sockjs-protocol/sockjs-protocol-0.3.3.py XhrPolling
 
 ws-raw-fuzzing:
 	./venv/bin/wstest -m fuzzingclient -s ./test/fuzzingclient.json

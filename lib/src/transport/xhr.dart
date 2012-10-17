@@ -29,11 +29,11 @@ options(HttpRequest req, HttpResponse res, [data, nextFilter]) {
   return '';
 }
 
-send(HttpRequest req, HttpResponse res, [data, nextFilter]) {
+send(HttpRequest req, HttpResponse res, [data = null, nextFilter]) {
   
   var d = null;
 
-  if (!?data) {
+  if (!?data || data == null) {
     throw new web.AppException(
       status: 500,
       message: 'Payload expected.'
