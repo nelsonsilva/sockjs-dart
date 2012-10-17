@@ -1,0 +1,10 @@
+{
+   "options": {"failByDrop": false},
+   "outdir": "./test/autobahn/reports",
+
+   "servers": [{"agent": "AutobahnServer", "url": "ws://localhost:8081/echo/websocket", "options": {"version": 18}}],
+
+   "cases": ["*"],
+   "exclude-cases": [],
+   "exclude-agent-cases": {}
+}
