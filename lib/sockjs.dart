@@ -6,8 +6,7 @@
 #import('dart:isolate');
 #import('dart:scalarlist');
 
-#import("package:dart_uuid/Uuid.dart");
-
+#import("package:uuid/Uuid.dart");
 
 #import("src/events.dart", prefix:'event');
 #import("src/web.dart", prefix:'web');
