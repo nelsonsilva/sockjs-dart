@@ -155,13 +155,12 @@ class App {
       return true;
   }
           
-  handleError(HttpRequest r, HttpResponse res, x) {
+  handleError(HttpRequest r, HttpResponse res, e) {
     //if res.finished
     //return x
-    
-    if (x is AppException) {
-      res.statusCode = x.status;
-      res.outputStream.writeString(x.message);
+    if (e is AppException) {
+      res.statusCode = e.status;
+      res.outputStream.writeString(e.message);
       res.outputStream.close();
     } else {
       try {
@@ -169,7 +168,7 @@ class App {
         res.outputStream.writeString("500 - Internal Server Error");
       } catch (y) {
         var req = new AppRequest(r);
-        log('error', 'Exception on ${req.method} ${req.uri} in filter ${req.lastFun}:\n ${x}');
+        log('error', 'Exception on ${req.method} ${req.uri} in filter ${req.lastFun}:\n ${e}');
       }
     }
     return true;
