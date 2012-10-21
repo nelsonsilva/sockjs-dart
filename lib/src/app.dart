@@ -23,10 +23,12 @@ class App extends web.App {
         this.prefix,
         this.sockjsUrl}) : super();
    
-  welcome_screen(HttpRequest req, HttpResponse res, [data, nextFilter]) {
+  welcome_screen(HttpRequest req, HttpResponse res, [data, nextFilter]) {    
+    String msg = 'Welcome to SockJS!\n';    
     res.headers.set(HttpHeaders.CONTENT_TYPE, "text/plain; charset=UTF-8");
     res.statusCode = 200;
-    res.outputStream.writeString('Welcome to SockJS!\n');
+    res.contentLength = msg.length;
+    res.outputStream.writeString(msg);    
     res.outputStream.close();
     return true;
   }
