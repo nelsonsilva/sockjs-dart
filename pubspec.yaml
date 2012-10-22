@@ -5,6 +5,6 @@ author:
 description:  A SockJS server in Dart
 dependencies:
   args: { sdk: args }
-  dart_uuid:
+  uuid:
     git: git://github.com/Daegalus/dart-uuid.git
 
