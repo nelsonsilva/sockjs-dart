@@ -1,17 +1,19 @@
+part of sockjs;
+
 class ConnectionEvents extends event.Events {
-  get data() => this["data"];
-  get end() => this["end"];
-  get close() => this["close"];
+  get data => this["data"];
+  get end => this["end"];
+  get close => this["close"];
 }
 
 class SockJSConnection implements event.Emitter<ConnectionEvents>, HttpConnectionInfo { //extends stream.Stream
-  
+
   ConnectionEvents on = new ConnectionEvents();
   SockJSSession session;
   Uuid id;
   Map headers;
   String prefix;
-  
+
   var remoteHost;
   var remotePort;
   var address;
@@ -19,9 +21,9 @@ class SockJSConnection implements event.Emitter<ConnectionEvents>, HttpConnectio
   var url;
   var pathname;
   var protocol;
-  
+
   var localPort;
-  
+
   SockJSConnection(this.session) {
         id  = new Uuid();
         headers = {};
@@ -48,9 +50,9 @@ class SockJSConnection implements event.Emitter<ConnectionEvents>, HttpConnectio
     }
 
     removeAllListeners() => on.removeAllListeners();
-    
+
     destroySoon() => destroy();
-    
+
     get readable => session.readyState == Transport.OPEN;
     get writable => session.readyState == Transport.OPEN;
     get readyState => session.readyState;

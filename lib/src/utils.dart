@@ -1,9 +1,9 @@
-#library("utils");
+library utils;
 
-#import("dart:io");
-#import('dart:uri');
-#import("dart:math", prefix:'Math');
-#import("dart:crypto");
+import "dart:io";
+import 'dart:uri';
+import "dart:math" as Math;
+import "dart:crypto";
 
 bool verify_origin(String origin, List<String> list_of_origins) {
     if (list_of_origins.indexOf('*:*') != -1) {
@@ -37,15 +37,15 @@ random32() {
   var rnd = new Math.Random();
   var foo = () => rnd.nextInt(256);
   var v = [foo(), foo(), foo(), foo()];
-  
+
   var x =  v[0] + (v[1]*256 ) + (v[2]*256*256) + (v[3]*256*256*256);
   return x;
 }
 
-md5_hex(String data) => CryptoUtils.bytesToHex(new MD5().update(data.charCodes()).digest());
-    
+md5_hex(String data) => CryptoUtils.bytesToHex(new MD5().update(data.charCodes).digest());
+
 getCacheFor(HttpResponse res) {
   String cacheFor = res.headers.value(HttpHeaders.CACHE_CONTROL);
   cacheFor = cacheFor.substring("public, max-age=".length);
-  return Math.parseInt(cacheFor);
+  return int.parse(cacheFor);
 }

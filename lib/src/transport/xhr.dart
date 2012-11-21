@@ -1,25 +1,25 @@
-#library("xhr");
+library xhr;
 
-#import("dart:io");
-#import("dart:json");
-#import("package:sockjs/sockjs.dart");
-#import("package:sockjs/src/web.dart", prefix:'web');
-#import("package:sockjs/src/utils.dart", prefix:'utils');
+import "dart:io";
+import "dart:json";
+import "package:sockjs/sockjs.dart";
+import "package:sockjs/src/web.dart" as web;
+import "package:sockjs/src/utils.dart" as utils;
 
 class StreamingReceiver extends ResponseReceiver {
     get protocol => "xhr-streaming";
-    
+
     StreamingReceiver(var response, {num responseLimit: null} ) : super(response, responseLimit: responseLimit);
-    
+
     doSendFrame(payload) => super.doSendFrame( "$payload\n");
 }
 
 class PollingReceiver extends StreamingReceiver {
-  
+
   get protocol => "xhr-polling";
-  
+
   PollingReceiver(var response ) : super(response, responseLimit: 1);
-  
+
 }
 
 options(HttpRequest req, HttpResponse res, [data, nextFilter]) {
@@ -30,7 +30,7 @@ options(HttpRequest req, HttpResponse res, [data, nextFilter]) {
 }
 
 send(HttpRequest req, HttpResponse res, [data = null, nextFilter]) {
-  
+
   var d = null;
 
   if (!?data || data == null) {
@@ -54,14 +54,14 @@ send(HttpRequest req, HttpResponse res, [data = null, nextFilter]) {
       message: 'Payload expected.'
     );
   }
-  
-  var sessionId = new web.AppRequest(req).session;
-  
+
+  var sessionId = new web.AppRequest(req).sessionId;
+
   var jsonp = Session.bySessionId(sessionId);
-  
+
   if (jsonp == null) {
     throw new web.AppException(status: 404);
-  } 
+  }
 
   d.forEach((message) => jsonp.didMessage(message));
 
@@ -72,11 +72,11 @@ send(HttpRequest req, HttpResponse res, [data = null, nextFilter]) {
   return true;
 }
 
-      
+
 cors(HttpRequest req, HttpResponse res, [content, nextFilter]) {
-  
+
   var origin = req.headers.value('origin');
- 
+
   if ( origin == null || origin == 'null') {
     origin = '*';
   }
@@ -89,9 +89,9 @@ cors(HttpRequest req, HttpResponse res, [content, nextFilter]) {
   res.headers.add('Access-Control-Allow-Credentials', 'true');
   return content;
 }
-  
+
 streaming(web.App app, [num responseLimit]) => (HttpRequest req, HttpResponse res, [content, nextFilter]) {
- 
+
   res.headers.add(HttpHeaders.CONTENT_TYPE, 'application/javascript; charset=UTF-8');
   res.statusCode = 200;
 
@@ -102,14 +102,14 @@ streaming(web.App app, [num responseLimit]) => (HttpRequest req, HttpResponse re
     s.add('h');
   }
   s.add('\n');
-  
+
   res.outputStream.writeString(s.toString());
-  
+
   Transport.register(req, app, new StreamingReceiver(res, responseLimit: responseLimit) );
-  
+
   return true;
 };
-       
+
 poll(web.App app, [num responseLimit]) => (HttpRequest req, HttpResponse res, [content, nextFilter]) {
   res.headers.add(HttpHeaders.CONTENT_TYPE, 'application/javascript; charset=UTF-8');
   res.statusCode = 200;

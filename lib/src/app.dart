@@ -1,28 +1,30 @@
+part of sockjs;
+
 typedef EmitFn(evt, data);
 
 class App extends web.App {
-  
+
   var jsessionid;
   var websocket;
   var origins;
   num responseLimit;
-  
+
   num heartbeatDelay;
   num disconnectDelay;
   String prefix;
   String sockjsUrl;
-  
+
   EmitFn emit;
-  
-  App({ this.jsessionid: false, 
-        this.websocket: true, 
-        this.origins: const ["*:*"], 
+
+  App({ this.jsessionid: false,
+        this.websocket: true,
+        this.origins: const ["*:*"],
         this.responseLimit,
         this.heartbeatDelay,
         this.disconnectDelay,
         this.prefix,
         this.sockjsUrl}) : super();
-   
+
   welcome_screen(HttpRequest req, HttpResponse res, [data, nextFilter]) {
     res.headers.set(HttpHeaders.CONTENT_TYPE, "text/plain; charset=UTF-8");
     res.statusCode = 200;
@@ -30,11 +32,11 @@ class App extends web.App {
     res.outputStream.close();
     return true;
   }
-  
+
   handle404(HttpRequest req, HttpResponse res, [data, nextFilter]) {
 
     res.headers.add(HttpHeaders.CONTENT_TYPE, "text/plain; charset=UTF-8");
-   
+
     res.statusCode = 404;
     res.outputStream.writeString('404 Error: Page not found\n');
     res.outputStream.close();
@@ -67,7 +69,7 @@ class App extends web.App {
   }
 
   log(severity, line) => print("[$severity] - $line");
-     
+
   // Chunking Test
   info(HttpRequest req, HttpResponse res, [data, nextFilter]) {
     var info = {
@@ -80,24 +82,24 @@ class App extends web.App {
     res.statusCode = 200;
     res.outputStream.writeString(JSON.stringify(info));
   }
-  
+
   info_options(HttpRequest req, HttpResponse res, [data, nextFilter]) {
     res.headers.add('Access-Control-Allow-Methods', 'OPTIONS, GET');
     res.headers.add('Access-Control-Max-Age', utils.getCacheFor(res));
     res.statusCode = 204;
     return '';
   }
-  
-  
+
+
   // DISPATCHER
   web.Dispatcher generateDispatcher(String prefix, [bool websocket = true]) {
-    
+
     var p = (s) => new RegExp('^${prefix}$s[/]?\$');
     var t = (s) => [p('/([^/.]+)/([^/.]+)$s'), 'server', 'session'];
-    
+
     var opts_filters = ([options_filter = null])
         => [h_sid, xhr.cors, cache_for, (options_filter != null)?options_filter:xhr.options, expose];
-    
+
     var route = new web.Dispatcher()
       ..GET(p(''), [welcome_screen])
       ..GET(p('/iframe[0-9-.a-z_]*.html'), [iframe(sockjsUrl), cache_for, expose])
@@ -116,7 +118,7 @@ class App extends web.App {
       ..OPTIONS(t('/xhr_streaming'), opts_filters());
       //..GET(t('/eventsource'), [h_sid, h_no_cache, eventsource])
       //..GET(t('/htmlfile'),    [h_sid, h_no_cache, htmlfile])
-    
+
 
     // TODO: remove this code on next major release
     if (websocket) {
@@ -125,7 +127,7 @@ class App extends web.App {
       // modify urls to return 404
       route.GET(t('/websocket'), [cache_for, disabled_transport]);
     }
-         
+
     return route;
   }
 }

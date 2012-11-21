@@ -1,10 +1,10 @@
-#library("test_server");
+library test_server;
 
-#import("dart:io");
-#import("dart:json");
-#import("dart:math", prefix:'Math');
+import "dart:io";
+import "dart:json";
+import "dart:math" as Math;
 
-#import("package:sockjs/sockjs.dart", prefix:"sockjs");
+import "package:sockjs/sockjs.dart" as sockjs;
 
 const HOST = "0.0.0.0",
       PORT = 8080;
@@ -47,13 +47,13 @@ get chat => broadcast;
 void main() {
 
   server = new HttpServer();
-  
+
   server.defaultRequestHandler = (HttpRequest req, HttpResponse res) {
 
     File script = new File(new Options().script);
     script.directory().then((Directory d) {
       final String basePath = "${d.path}/../example";
-     
+
       final String path = req.path == '/' ? '/index.html' : req.path;
 
       final File file = new File('${basePath}${path}');
@@ -71,14 +71,14 @@ void main() {
         }
       });
     });
-    
+
   };
- 
+
   echo.installHandlers(server, prefix:'/echo');
   chat.installHandlers(server, prefix:'/chat');
   broadcast.installHandlers(server, prefix:'/broadcast');
-  
+
   server.listen(HOST, PORT);
-  
+
   print("Server listening on $HOST:$PORT");
 }

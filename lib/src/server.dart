@@ -1,11 +1,13 @@
+part of sockjs;
+
 class ServerEvents extends event.Events {
-  get connection() => this["connection"];
+  get connection => this["connection"];
 }
-        
+
 class Server implements event.Emitter<ServerEvents> {
-  
+
   ServerEvents on = new ServerEvents();
-  
+
   // Options
   String prefix;
   num responseLimit;
@@ -16,7 +18,7 @@ class Server implements event.Emitter<ServerEvents> {
   num disconnectDelay;
   LogFn log;
   String sockjsUrl;
-    
+
   Server([  this.prefix,
             this.responseLimit,
             this.origins,
@@ -26,17 +28,17 @@ class Server implements event.Emitter<ServerEvents> {
             this.disconnectDelay,
             this.log,
             this.sockjsUrl]);
-  
+
   installHandlers(HttpServer httpServer, {
         String prefix: '',
         num responseLimit: 128*1024,
         List<String >origins: const ['*:*'],
         bool websocket: true,
         bool jsessionid: false}) {
-    
+
       var app = new App(
-          jsessionid: jsessionid, 
-          websocket: websocket, 
+          jsessionid: jsessionid,
+          websocket: websocket,
           origins: origins,
           responseLimit: responseLimit,
           heartbeatDelay: heartbeatDelay,
@@ -50,9 +52,9 @@ class Server implements event.Emitter<ServerEvents> {
           pathRegexp = new RegExp('^${prefix}([/].+|[/]?)\$'),
           matcher = (HttpRequest request) => pathRegexp.hasMatch(request.uri),
           handler = (HttpRequest request, HttpResponse response) => appHandler(request, response);
-        
+
       httpServer.addRequestHandler(matcher, handler);
-  
+
       return true;
   }
 

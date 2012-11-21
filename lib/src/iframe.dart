@@ -1,3 +1,5 @@
+part of sockjs;
+
 iframe(String sockjsUrl) => (HttpRequest req, HttpResponse res, [data, nextFilter]) {
 
   var content = """<!DOCTYPE html>
@@ -16,19 +18,19 @@ iframe(String sockjsUrl) => (HttpRequest req, HttpResponse res, [data, nextFilte
   <p>This is a SockJS hidden iframe. It's used for cross domain magic.</p>
 </body>
 </html>""";
-  
+
   var quoted_md5 = '"${utils.md5_hex(content)}"';
 
   String v = req.headers.value('if-none-match');
-  
+
   if ((v != null) && (v == quoted_md5)) {
     res.statusCode = 304;
     return '';
   }
-  
+
   res.headers.add(HttpHeaders.CONTENT_TYPE, 'text/html; charset=UTF-8');
   res.headers.add('ETag', quoted_md5);
-  
+
   print(content);
   return content;
 };

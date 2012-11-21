@@ -1,22 +1,24 @@
+part of sockjs;
+
 abstract class SockJSSession {
   String prefix;
   int readyState = Transport.CONNECTING;
   SockJSConnection connection;
   GenericReceiver recv;
-  
+
   send(String msg);
   close([int status, String reason]);
-  
+
   decorateConnection(HttpRequest req) {
 
     // Store the last known address.
     var socket = recv.connection;
-    
-    
+
+
     if(socket == null) {
       socket = recv.connectionInfo;
     }
-    
+
     connection.remoteHost = socket.remoteHost;
     connection.remotePort = socket.remotePort;
     try {
@@ -30,13 +32,13 @@ abstract class SockJSSession {
     connection.protocol = recv.protocol;
 
     var headers = {};
-    for (var key in ['referer', 'x-client-ip', 'x-forwarded-for', 
+    for (var key in ['referer', 'x-client-ip', 'x-forwarded-for',
                      'x-cluster-client-ip', 'via', 'x-real-ip']) {
       if (req.headers.value(key) != null) {
         headers[key] = req.headers.value(key);
       }
     }
-    if (!headers.isEmpty()) {
+    if (!headers.isEmpty) {
       connection.headers = headers;
     }
 
@@ -44,42 +46,42 @@ abstract class SockJSSession {
 }
 
 class Session extends SockJSSession {
-  
+
     static Map<String, Session> MAP = {};
-  
+
     String sessionId;
-    
+
     num heartbeatDelay;
     num disconnectDelay;
-    
+
     List send_buffer = [];
-    
+
     bool isClosing = false;
-    
+
     var timeout_cb;
     Timer to_tref;
-   
+
     var emit_open;
-          
+
     var close_frame;
-    
+
     static Session bySessionId(session_id) {
       if (session_id == null) { return null; }
       return MAP[session_id];
     }
-        
+
     Session(this.sessionId, App server) {
 
         heartbeatDelay = server.heartbeatDelay;
         disconnectDelay = server.disconnectDelay;
         prefix = server.prefix;
-        
+
         readyState = Transport.CONNECTING;
-        
+
         if (sessionId != null) {
             MAP[sessionId] = this;
         }
-        
+
         timeout_cb = () => didTimeout();
         to_tref = new Timer(disconnectDelay, (Timer t) => timeout_cb());
         connection = new SockJSConnection(this);
@@ -140,7 +142,7 @@ class Session extends SockJSSession {
     }
 
     tryFlush() {
-        if (!send_buffer.isEmpty() ) {
+        if (!send_buffer.isEmpty ) {
           var sb = send_buffer;
           send_buffer = [];
           recv.doSendBulk(sb);
@@ -177,9 +179,9 @@ class Session extends SockJSSession {
 
         connection.on.end.dispatch(connection);
         connection.on.close.dispatch(connection);
-        
+
         connection = null;
-        
+
         if (sessionId != null) {
           MAP.remove(sessionId);
           sessionId = null;
@@ -219,7 +221,7 @@ class Session extends SockJSSession {
         }
         return true;
     }
-    
+
     closeFrame(status, reason) => 'c${JSON.stringify([status, reason])}';
 
 }

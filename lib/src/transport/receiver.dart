@@ -1,25 +1,27 @@
+part of sockjs;
+
 class Receiver {
   SockJSConnection connection;
 }
 
 abstract class GenericReceiver extends Receiver {
-  
+
     OutputStream thingy;
     var thingy_end_cb;
     Session session;
-    
+
     // HttpResponse response;
     HttpConnectionInfo connectionInfo;
-    
+
     get protocol;
-    
+
     //GenericReceiver([this.thingy]) {
     //    setUp();
     //}
 
     setUp() {
         thingy_end_cb = () => didAbort(1006, "Connection closed");
-        
+
         //thingy.onClosed = thingy_end_cb;
         //thingy.addListener('end', thingy_end_cb);
     }
@@ -52,8 +54,8 @@ abstract class GenericReceiver extends Receiver {
         var str = Strings.join(q_msgs, ',');
         doSendFrame('a[$str]');
     }
-    
-    abstract doSendFrame(payload);
+
+    doSendFrame(payload);
 }
 
 
@@ -64,29 +66,29 @@ abstract class ResponseReceiver extends GenericReceiver {
 
     HttpResponse response;
     var options;
-    
+
     ResponseReceiver(this.response, {num responseLimit: null} ) { //: super(response.outputStream) {
-      
-       
+
+
         this.connectionInfo = response.connectionInfo;
-        
+
         try {
             // setKeepAlive
             // since we already accessed the outputstream we cannot change persistentConnection
             // response.persistentConnection = true; //, 5000);
-            
+
             response.headers.add(HttpHeaders.CONNECTION, "keep-alive");
-            
-            
+
+
         } catch (e) {
           //print("Got exception $e");
         }
-        
+
         if (max_response_size == null) {
             max_response_size = responseLimit;
         }
-        
-        
+
+
     }
 
     doSendFrame(payload) {

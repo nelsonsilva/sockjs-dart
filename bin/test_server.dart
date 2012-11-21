@@ -1,12 +1,12 @@
-#library("test_server");
+library test_server;
 
-#import("dart:io");
-#import("dart:json");
-#import('dart:math');
-#import('dart:isolate');
+import "dart:io";
+import "dart:json";
+import 'dart:math';
+import 'dart:isolate';
 
-#import('package:args/args.dart');
-#import("package:sockjs/sockjs.dart", prefix:"sockjs");
+import 'package:args/args.dart';
+import "package:sockjs/sockjs.dart" as sockjs;
 
 /// QUnit tests from sockjs-client
 qunitTests(server, host, port) {
@@ -19,7 +19,7 @@ qunitTests(server, host, port) {
         final File file = new File('${basePath}/../test${request.path}');
         file.openInputStream().pipe(response.outputStream);
       });
-  
+
   // slow-script.js
   server.addRequestHandler(
       (HttpRequest request) { return request.path == '/slow-script.js';},
@@ -30,7 +30,7 @@ qunitTests(server, host, port) {
           response.outputStream.close();
         });
       });
-  
+
   // streaming.txt
   server.addRequestHandler(
       (HttpRequest request) { return request.path == '/streaming.txt';},
@@ -48,7 +48,7 @@ qunitTests(server, host, port) {
           response.outputStream.close();
         });
       });
-  
+
   // simple.txt
   server.addRequestHandler(
       (HttpRequest request) { return request.path == '/simple.txt';},
@@ -63,7 +63,7 @@ qunitTests(server, host, port) {
         response.outputStream.writeString(s.toString());
         response.outputStream.close();
       });
-  
+
   // config.js
   server.addRequestHandler(
       (HttpRequest request) { return request.path == '/config.js';},
@@ -98,37 +98,37 @@ void main() {
     ..addOption('heartbeatDelay', defaultsTo: 25000.toString())
     ..addOption('disconnectDelay', defaultsTo: 5000.toString())
     ..addOption('sockjsUrl', defaultsTo: 'http://localhost:8080/lib/sockjs.js');
-  
+
   List<String> argv = (new Options()).arguments;
-  
+
   var opts = parser.parse(argv);
-  
+
   if (opts['help'] != null) {
     print(parser.getUsage());
     exit(0);
   }
-  
+
   HttpServer server = new HttpServer();
-    
+
   server.defaultRequestHandler = (HttpRequest req, HttpResponse res) {
     res.headers.set(HttpHeaders.CONTENT_TYPE, "text/plain");
     res.statusCode = 404;
     //res.outputStream.writeString('404 - Nothing here (via sockjs-dart test_server)');
     res.outputStream.close();
   };
-  
-  // INSTALL 
-     
-  var sjs_echo = sockjs.createServer( 
+
+  // INSTALL
+
+  var sjs_echo = sockjs.createServer(
       prefix: opts["prefix"],
-      responseLimit: parseInt(opts["responseLimit"]),
+      responseLimit: int.parse(opts["responseLimit"]),
       origins: opts["origins"].split(","),
       websocket: opts["websocket"] == "true",
       jsessionid: opts["jsessionid"] == "true",
-      heartbeatDelay: parseInt(opts["heartbeatDelay"]),
-      disconnectDelay: parseInt(opts["disconnectDelay"]),
+      heartbeatDelay: int.parse(opts["heartbeatDelay"]),
+      disconnectDelay: int.parse(opts["disconnectDelay"]),
       sockjsUrl: opts["sockjsUrl"]);
-  
+
   sjs_echo.on.connection.add( (conn) {
     print("    [+] echo open    $conn");
     conn.on.close.add( (_) => print("    [-] echo close   $conn") );
@@ -140,15 +140,15 @@ void main() {
     });
   });
 
-  
+
   var sjs_close = sockjs.createServer(
       prefix: opts["prefix"],
-      responseLimit: parseInt(opts["responseLimit"]),
+      responseLimit: int.parse(opts["responseLimit"]),
       origins: opts["origins"].split(","),
       websocket: opts["websocket"] == "true",
       jsessionid: opts["jsessionid"] == "true",
-      heartbeatDelay: parseInt(opts["heartbeatDelay"]),
-      disconnectDelay: parseInt(opts["disconnectDelay"]),
+      heartbeatDelay: int.parse(opts["heartbeatDelay"]),
+      disconnectDelay: int.parse(opts["disconnectDelay"]),
       sockjsUrl: opts["sockjsUrl"]);
   sjs_close.on.connection.add( (conn) {
     print('    [+] clos open    $conn');
@@ -158,12 +158,12 @@ void main() {
 
   var sjs_ticker = sockjs.createServer(
       prefix: opts["prefix"],
-      responseLimit: parseInt(opts["responseLimit"]),
+      responseLimit: int.parse(opts["responseLimit"]),
       origins: opts["origins"].split(","),
       websocket: opts["websocket"] == "true",
       jsessionid: opts["jsessionid"] == "true",
-      heartbeatDelay: parseInt(opts["heartbeatDelay"]),
-      disconnectDelay: parseInt(opts["disconnectDelay"]),
+      heartbeatDelay: int.parse(opts["heartbeatDelay"]),
+      disconnectDelay: int.parse(opts["disconnectDelay"]),
       sockjsUrl: opts["sockjsUrl"]);
   sjs_ticker.on.connection.add((conn) {
     print('    [+] ticker open   $conn');
@@ -183,12 +183,12 @@ void main() {
   var broadcast = {};
   var sjs_broadcast = sockjs.createServer(
       prefix: opts["prefix"],
-      responseLimit: parseInt(opts["responseLimit"]),
+      responseLimit: int.parse(opts["responseLimit"]),
       origins: opts["origins"].split(","),
       websocket: opts["websocket"] == "true",
       jsessionid: opts["jsessionid"] == "true",
-      heartbeatDelay: parseInt(opts["heartbeatDelay"]),
-      disconnectDelay: parseInt(opts["disconnectDelay"]),
+      heartbeatDelay: int.parse(opts["heartbeatDelay"]),
+      disconnectDelay: int.parse(opts["disconnectDelay"]),
       sockjsUrl: opts["sockjsUrl"]);
   sjs_broadcast.on.connection.add( (conn) {
     print('    [+] broadcast open $conn');
@@ -205,38 +205,38 @@ void main() {
 
   var sjs_amplify = sockjs.createServer(
       prefix: opts["prefix"],
-      responseLimit: parseInt(opts["responseLimit"]),
+      responseLimit: int.parse(opts["responseLimit"]),
       origins: opts["origins"].split(","),
       websocket: opts["websocket"] == "true",
       jsessionid: opts["jsessionid"] == "true",
-      heartbeatDelay: parseInt(opts["heartbeatDelay"]),
-      disconnectDelay: parseInt(opts["disconnectDelay"]));
+      heartbeatDelay: int.parse(opts["heartbeatDelay"]),
+      disconnectDelay: int.parse(opts["disconnectDelay"]));
   sjs_amplify.on.connection.add((conn) {
     print('    [+] amp open    $conn');
     conn.on.close.add( (_) => print('    [-] amp close   $conn'));
-  
+
     conn.on.data.add( (m) {
-      var n = parseInt(m);
+      var n = int.parse(m);
       n = (n > 0 && n < 19) ? n : 1;
       print('    [ ] amp message: 2^$n');
       print(Strings.join(new List(pow(2, n)+1),'x'));
     });
   });
 
-  
+
   sjs_echo
     ..installHandlers(server, prefix:'/echo', responseLimit: 4096)
     ..installHandlers(server, prefix:'/disabled_websocket_echo', websocket: false)
     ..installHandlers(server, prefix:'/cookie_needed_echo', jsessionid: true);
-  
+
   sjs_close.installHandlers(server, prefix:'/close');
   sjs_ticker.installHandlers(server, prefix:'/ticker');
   sjs_amplify.installHandlers(server, prefix:'/amplify');
   sjs_broadcast.installHandlers(server, prefix:'/broadcast');
-  
+
   qunitTests(server, opts["host"], opts["port"]);
-  
-  server.listen(opts["host"], parseInt(opts["port"]));
-  
+
+  server.listen(opts["host"], int.parse(opts["port"]));
+
   print("Server listening on ${opts["host"]}:${server.port}");
 }

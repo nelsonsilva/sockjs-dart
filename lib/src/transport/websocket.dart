@@ -1,26 +1,26 @@
-#library("websocket");
+library websocket;
 
-#import("dart:io");
-#import("dart:json");
-#import("package:sockjs/sockjs.dart");
-#import("package:sockjs/src/web.dart", prefix:'web');
-#import("package:sockjs/src/utils.dart", prefix:'utils');
+import "dart:io";
+import "dart:json";
+import "package:sockjs/sockjs.dart";
+import "package:sockjs/src/web.dart" as web;
+import "package:sockjs/src/utils.dart" as utils;
 
 class WebSocketReceiver extends GenericReceiver {
     get protocol => "websocket";
 
     WebSocketConnection ws;
-    
+
     WebSocketReceiver(this.ws, HttpConnectionInfo info) {
 
       //this.response = response;
-      
+
       // this is null for a detached socket!
       this.connectionInfo = info;
-      
+
 
         ws.onMessage = (m) => didMessage(m);
-        
+
         setUp();
     }
 
@@ -36,7 +36,7 @@ class WebSocketReceiver extends GenericReceiver {
 
     didMessage(payload) {
 
-        if (ws != null && session != null && !payload.isEmpty()) {
+        if (ws != null && session != null && !payload.isEmpty) {
           var message;
             try {
                 message = JSON.parse(payload);
@@ -71,32 +71,32 @@ class WebSocketReceiver extends GenericReceiver {
     }
 }
 
-        
+
 class RawWebsocketSessionReceiver extends SockJSSession {
   WebSocketConnection ws;
-  
+
   var _end_cb;
   var _message_cb;
-  
+
   RawWebsocketSessionReceiver(HttpRequest req, HttpResponse conn, App server, this.ws) {
     prefix = server.prefix;
     readyState = Transport.OPEN;
 
     connection = new SockJSConnection(this);
     decorateConnection(req);
-    
+
     server.emit('connection',connection);
-    
+
     _end_cb = () => didClose();
-    
+
     ws.onClosed = (int status, String reason) {
       _end_cb();
     };
-    
+
     _message_cb = (m) => didMessage(m);
-    
+
     ws.onMessage = (m) => _message_cb(m);
-    
+
   }
 
   didMessage(m) {
@@ -122,18 +122,18 @@ class RawWebsocketSessionReceiver extends SockJSSession {
       ws.close(status, reason);
       return true;
   }
-  
+
   didClose() {
       if (ws == null) {
           return;
       }
       ws.onMessage = null;
       ws.onClosed = null;
-      
+
       try {
           ws.close();
       } catch (_) { }
-      
+
       ws = null;
 
       readyState = Transport.CLOSED;
@@ -141,13 +141,13 @@ class RawWebsocketSessionReceiver extends SockJSSession {
       connection.on.close.dispatch();
       connection = null;
   }
-    
+
   // copied from Session to remove ugly inheritance
   decorateConnection(HttpRequest req) {
 
     // Store the last known address.
     var socket = connection;
-    
+
     connection.remoteHost = socket.remoteHost;
     connection.remotePort = socket.remotePort;
     try {
@@ -161,13 +161,13 @@ class RawWebsocketSessionReceiver extends SockJSSession {
     connection.protocol = connection.protocol;
 
     var headers = {};
-    for (var key in ['referer', 'x-client-ip', 'x-forwarded-for', 
+    for (var key in ['referer', 'x-client-ip', 'x-forwarded-for',
                 'x-cluster-client-ip', 'via', 'x-real-ip']) {
       if (req.headers.value(key) != null) {
         headers[key] = req.headers.value(key);
       }
     }
-    if (!headers.isEmpty()) {
+    if (!headers.isEmpty) {
         connection.headers = headers;
     }
   }
@@ -186,7 +186,7 @@ _websocketCheck(HttpRequest req, List<String> origins) {
         message: 'Can "Upgrade" only to "WebSocket".'
       );
     }
-    
+
     var origin = req.headers.value("origin");
     if (!utils.verify_origin(origin, origins)) {
         throw new web.AppException(
@@ -194,16 +194,16 @@ _websocketCheck(HttpRequest req, List<String> origins) {
           message: 'Unverified origin.');
     }
   }
-  
-raw(web.App app, List<String> origins) => (HttpRequest req, HttpResponse res, [data, nextFilter]) { 
+
+raw(web.App app, List<String> origins) => (HttpRequest req, HttpResponse res, [data, nextFilter]) {
   _websocketCheck(req, origins);
-    
+
   _wsHandler.onOpen = (WebSocketConnection conn) {
     new RawWebsocketSessionReceiver(req, res, app, conn);
   };
   _wsHandler.onRequest(req, res);
 };
-  
+
 sockjs(web.App app, List<String> origins) => (HttpRequest req, HttpResponse res, [data, nextFilter]) {
   _websocketCheck(req, origins);
   var info = req.connectionInfo;
@@ -213,4 +213,3 @@ sockjs(web.App app, List<String> origins) => (HttpRequest req, HttpResponse res,
   };
   _wsHandler.onRequest(req, res);
 };
-  

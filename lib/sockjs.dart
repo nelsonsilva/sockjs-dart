@@ -1,26 +1,26 @@
-#library("sockjs");
+library sockjs;
 
-#import("dart:io");
-#import("dart:json");
-#import("dart:math", prefix:'Math');
-#import('dart:isolate');
-#import('dart:scalarlist');
+import "dart:io";
+import "dart:json";
+import "dart:math" as Math;
+import 'dart:isolate';
+import 'dart:scalarlist';
 
-#import("package:dart_uuid/Uuid.dart");
+import "package:uuid/uuid.dart";
 
-#import("src/events.dart", prefix:'event');
-#import("src/web.dart", prefix:'web');
-#import("src/utils.dart", prefix:'utils');
-#import("src/transport/xhr.dart", prefix:'xhr');
-#import("src/transport/websocket.dart", prefix:'ws');
+import "src/events.dart" as event;
+import "src/web.dart" as web;
+import "src/utils.dart" as utils;
+import "src/transport/xhr.dart" as xhr;
+import "src/transport/websocket.dart" as ws;
 
-#source("src/app.dart");
-#source("src/server.dart");
-#source("src/transport.dart");
-#source("src/iframe.dart");
-#source("src/transport/connection.dart");
-#source("src/transport/session.dart");
-#source("src/transport/receiver.dart");
+part "src/app.dart";
+part "src/server.dart";
+part "src/transport.dart";
+part "src/iframe.dart";
+part "src/transport/connection.dart";
+part "src/transport/session.dart";
+part "src/transport/receiver.dart";
 
 typedef LogFn(severity, line);
 
@@ -35,7 +35,7 @@ Server createServer({
   num heartbeatDelay: 25000,
   num disconnectDelay: 5000,
   LogFn log: log,
-  String sockjsUrl: 'http://cdn.sockjs.org/sockjs-0.3.min.js'}) 
+  String sockjsUrl: 'http://cdn.sockjs.org/sockjs-0.3.min.js'})
   => new Server(  prefix,
                   responseLimit,
                   origins,
@@ -46,10 +46,11 @@ Server createServer({
                   log,
                   sockjsUrl);
 
+/*
 listen(httpServer, options) {
     var srv = createServer(options);
     if (httpServer != null) {
         srv.installHandlers(httpServer);
     }
     return srv;
-}
+}*/
