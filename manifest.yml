@@ -1,0 +1,15 @@
+--- 
+applications: 
+  .: 
+    name: sockjs-dart
+    instances: 1
+    framework: 
+      name: standalone
+      info: 
+        exec: 
+        description: Standalone Application
+        mem: 64M
+    command: ./deploy/run_test_server.sh
+    url: sockjs-dart.cloudfoundry.com
+    runtime: java
+    mem: 128M
