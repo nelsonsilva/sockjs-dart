@@ -82,7 +82,9 @@ class App extends web.App {
     };
     res.headers.add(HttpHeaders.CONTENT_TYPE, 'application/json; charset=UTF-8');
     res.statusCode = 200;
-    res.outputStream.writeString(JSON.stringify(info));
+    var result = JSON.stringify(info);
+    res.contentLength = result.length;
+    res.outputStream.writeString(result);
   }
 
   info_options(HttpRequest req, HttpResponse res, [data, nextFilter]) {

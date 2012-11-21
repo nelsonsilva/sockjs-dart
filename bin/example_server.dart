@@ -72,6 +72,7 @@ void main() {
 
         if (found) {
           file.fullPath().then((String fullPath) {
+            res.contentLength = file.lengthSync();
             file.openInputStream().pipe(res.outputStream);
           });
         } else {
