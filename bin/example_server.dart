@@ -5,9 +5,7 @@ import "dart:json";
 import "dart:math" as Math;
 
 import "package:sockjs/sockjs.dart" as sockjs;
-
-const HOST = "0.0.0.0",
-      PORT = 8080;
+import 'package:args/args.dart';
 
 HttpServer server;
 
@@ -46,6 +44,19 @@ get chat => broadcast;
 
 void main() {
 
+  var parser = new ArgParser();
+
+  parser
+    ..addOption('port', defaultsTo: '8080')
+    ..addOption('host', defaultsTo: '0.0.0.0');
+
+  List<String> argv = (new Options()).arguments;
+
+  var opts = parser.parse(argv);
+  
+  var host = opts["host"],
+      port = int.parse(opts["port"]);
+  
   server = new HttpServer();
 
   server.defaultRequestHandler = (HttpRequest req, HttpResponse res) {
@@ -78,7 +89,7 @@ void main() {
   chat.installHandlers(server, prefix:'/chat');
   broadcast.installHandlers(server, prefix:'/broadcast');
 
-  server.listen(HOST, PORT);
+  server.listen(host, port);
 
-  print("Server listening on $HOST:$PORT");
+  print("Server listening on $host:$port");
 }
