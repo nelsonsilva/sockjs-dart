@@ -1,5 +1,5 @@
 #!/bin/bash
-PACKAGES="packages"
+PACKAGES="$PWD/packages"
 mkdir -p $PACKAGES
 
 package() {
@@ -7,7 +7,7 @@ package() {
  version=$2
  url=$3
  echo "Packaging $name v$version"
- echo "{'name':'$name','versions':['$version']}" > $PACKAGES/$name.json
+ echo "{\"name\":\"$name\",\"versions\":[\"$version\"]}" > $PACKAGES/$name.json
  dir=$PACKAGES/$name/versions
  mkdir -p $dir
  cd $dir
@@ -24,5 +24,6 @@ START=$PWD
 URL=`git config --get remote.origin.url`
 
 package "sockjs" "0.1.0" $URL
+package "sockjs_client" "0.1.0" "git@github.com:nelsonsilva/sockjs-dart-client.git"
 
 cd $START
